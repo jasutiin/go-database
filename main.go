@@ -8,6 +8,6 @@ import (
 
 func main() {
 	fmt.Println("Hello, World!")
-	engine := engine.Engine{}
-	engine.Startup()
+	databaseEngine := engine.Engine{}
+	databaseEngine.Startup()
 }

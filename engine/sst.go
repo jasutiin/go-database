@@ -10,10 +10,10 @@ type sst struct {
 	file        *os.File    // underlying file for the SST
 }
 
-func NewSST() {
+func newSST() {
 
 }
 
-func AppendEntry() {
+func appendEntry() {
 
 }
