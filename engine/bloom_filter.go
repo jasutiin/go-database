@@ -1,4 +1,4 @@
-package sst
+package engine
 
 import "hash/maphash"
 
