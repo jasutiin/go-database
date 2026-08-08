@@ -2,7 +2,7 @@ package engine
 
 import "hash/maphash"
 
-type Filter struct {
+type filter struct {
 	bits  []uint64
 	m     uint64
 	k     uint64

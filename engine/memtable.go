@@ -1,4 +1,4 @@
 package engine
 
-type MemTable struct {
+type memTable struct {
 }

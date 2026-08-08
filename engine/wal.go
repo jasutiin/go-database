@@ -1,4 +1,4 @@
 package engine
 
-type WAL struct {
+type wal struct {
 }

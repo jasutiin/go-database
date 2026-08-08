@@ -1,8 +1,8 @@
 package engine
 
 type Engine struct {
-	memTable MemTable
-	wal      WAL
+	table         memTable
+	writeAheadLog wal
 }
 
 // TODO: consider not having this act on engine
