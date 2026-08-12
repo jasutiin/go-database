@@ -7,7 +7,8 @@ type Engine struct {
 }
 
 func Startup() (*Engine, error) {
-	return &Engine{}, nil
+	table := NewMemTable()
+	return &Engine{table: table}, nil
 }
 
 func (engine *Engine) Stop() {

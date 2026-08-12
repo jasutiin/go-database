@@ -11,3 +11,10 @@ type memTable struct {
 	size    int
 	maxSize int
 }
+
+func NewMemTable() *memTable {
+	return &memTable{
+		entries: make(map[string][]memTableEntry),
+		maxSize: 1024,
+	}
+}
