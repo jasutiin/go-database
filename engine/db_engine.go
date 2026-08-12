@@ -6,9 +6,8 @@ type Engine struct {
 	sstables      []*sst
 }
 
-// TODO: consider not having this act on engine
-func (engine *Engine) Startup() {
-
+func Startup() (*Engine, error) {
+	return &Engine{}, nil
 }
 
 func (engine *Engine) Stop() {
