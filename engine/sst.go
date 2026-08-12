@@ -2,6 +2,11 @@ package engine
 
 import "os"
 
+type sstEntry struct {
+	key    string
+	offset int64
+}
+
 type sst struct {
 	sparseIndex map[int]int // key-byte offset mapping for blocks
 	bloomFilter filter      // bloom filter for key existence

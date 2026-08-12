@@ -1,8 +1,9 @@
 package engine
 
 type Engine struct {
-	table         memTable
-	writeAheadLog wal
+	table         *memTable
+	writeAheadLog *wal
+	sstables      []*sst
 }
 
 // TODO: consider not having this act on engine
