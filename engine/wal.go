@@ -7,3 +7,9 @@ type wal struct {
 	file *os.File
 	size int64
 }
+
+func LoadWAL() (*wal, error) {
+	return &wal{
+		path: "wal.log",
+	}, nil
+}

@@ -12,9 +12,9 @@ type memTable struct {
 	maxSize int
 }
 
-func NewMemTable() *memTable {
+func LoadMemTable() (*memTable, error) {
 	return &memTable{
 		entries: make(map[string][]memTableEntry),
 		maxSize: 1024,
-	}
+	}, nil
 }
