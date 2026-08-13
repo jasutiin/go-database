@@ -22,7 +22,7 @@ func Startup(opts *Options) (*Engine, error) {
 }
 
 func (engine *Engine) recover(opts *Options) error {
-	log, err := LoadWAL()
+	log, err := LoadWAL(opts)
 
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func (engine *Engine) recover(opts *Options) error {
 }
 
 func (engine *Engine) Stop() {
-
+	fmt.Println("Stop() not implemented")
 }
 
 func (engine *Engine) Get(key []byte) {
