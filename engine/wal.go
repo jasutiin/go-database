@@ -17,9 +17,13 @@ func LoadWAL(opts *Options) (*wal, error) {
 		return nil, err
 	}
 
-	exPath := filepath.Dir(ex)
-	walPath := exPath + opts.DbName + "/wal.log"
-	wal := new(wal)
+	dbPath := filepath.Join(filepath.Dir(ex), opts.DbName)
+
+	if err := os.MkdirAll(dbPath, 0o755); err != nil {
+		return nil, err
+	}
+
+	walPath := filepath.Join(dbPath, "wal.log")
 
 	// create if missing, otherwise allow read/write. writes go to the end of the file
 	// 0o644 means owner = r/w, group = r, others = r
@@ -29,12 +33,8 @@ func LoadWAL(opts *Options) (*wal, error) {
 	}
 
 	// TODO: set size for wal?
-	wal.path = walPath
-	wal.file = file
-
-	if err != nil {
-		return nil, err
-	}
-
-	return wal, nil
+	return &wal{
+		path: walPath,
+		file: file,
+	}, nil
 }
