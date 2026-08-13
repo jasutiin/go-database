@@ -7,7 +7,8 @@ import (
 )
 
 func main() {
-	db, err := engine.Startup()
+	opts := &engine.Options{DbName: "name"}
+	db, err := engine.Startup(opts)
 
 	if err != nil {
 		fmt.Println(err.Error())

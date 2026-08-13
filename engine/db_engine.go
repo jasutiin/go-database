@@ -10,9 +10,9 @@ type Engine struct {
 	sstables      []*sst
 }
 
-func Startup() (*Engine, error) {
+func Startup(opts *Options) (*Engine, error) {
 	engine := &Engine{}
-	err := engine.recover()
+	err := engine.recover(opts)
 
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func Startup() (*Engine, error) {
 	return engine, nil
 }
 
-func (engine *Engine) recover() error {
+func (engine *Engine) recover(opts *Options) error {
 	log, err := LoadWAL()
 
 	if err != nil {
