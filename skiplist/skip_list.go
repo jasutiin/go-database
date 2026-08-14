@@ -32,7 +32,7 @@ func NewSkipList[T any](maxLevel int, compare func(a, b T) int) *SkipList[T] {
 func (s *SkipList[T]) Insert(node *Node[T]) error {
 	randomLevel := rand.IntN(s.maxLevel)
 
-	for level := 0; level < randomLevel; level++ {
+	for level := range randomLevel {
 		currentLevel := s.head.next[level]
 
 		if currentLevel.next == nil {
