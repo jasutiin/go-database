@@ -1,5 +1,6 @@
 package engine
 
 type Options struct {
-	DbName string
+	DbName           string
+	SkipListMaxLevel int
 }

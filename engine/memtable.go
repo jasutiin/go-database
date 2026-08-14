@@ -14,9 +14,19 @@ type memTable struct {
 	maxSize int
 }
 
-func LoadMemTable() (*memTable, error) {
+func LoadMemTable(opts Options) (*memTable, error) {
 	return &memTable{
-		entries: new(skiplist.SkipList[memTableEntry]),
+		entries: skiplist.NewSkipList(opts.SkipListMaxLevel, compareEntries),
 		maxSize: 1024,
 	}, nil
+}
+
+func compareEntries(a, b memTableEntry) int {
+	if a.key < b.key {
+		return -1
+	}
+	if a.key > b.key {
+		return 1
+	}
+	return 0
 }
