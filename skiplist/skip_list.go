@@ -14,14 +14,14 @@ type SkipList[T any] struct {
 	maxLevel int
 }
 
-func (s *SkipList[T]) Insert(node *Node[T]) {
-
+func (s *SkipList[T]) Insert(node *Node[T]) error {
+	return nil
 }
 
-func (s *SkipList[T]) Delete(node *Node[T]) {
-
+func (s *SkipList[T]) Delete(node *Node[T]) error {
+	return nil
 }
 
-func (s *SkipList[T]) Find(node *Node[T]) *Node[T] {
+func (s *SkipList[T]) Find(node *Node[T]) (*Node[T], error) {
 
 }

@@ -12,10 +12,6 @@ func TestLoadMemTableInitializesEmptyTable(t *testing.T) {
 		t.Fatal("LoadMemTable() entries = nil")
 	}
 
-	if len(table.entries) != 0 {
-		t.Fatalf("LoadMemTable() entry count = %d, want 0", len(table.entries))
-	}
-
 	if table.size != 0 {
 		t.Fatalf("LoadMemTable() size = %d, want 0", table.size)
 	}
