@@ -14,7 +14,7 @@ type memTable struct {
 	maxSize int
 }
 
-func LoadMemTable(opts Options) (*memTable, error) {
+func LoadMemTable(opts *Options) (*memTable, error) {
 	return &memTable{
 		entries: skiplist.NewSkipList(opts.SkipListMaxLevel, compareEntries),
 		maxSize: 1024,

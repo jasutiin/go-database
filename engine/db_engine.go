@@ -28,7 +28,7 @@ func (engine *Engine) recover(opts *Options) error {
 		return err
 	}
 
-	table, err := LoadMemTable()
+	table, err := LoadMemTable(opts)
 
 	if err != nil {
 		return err

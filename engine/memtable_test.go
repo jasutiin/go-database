@@ -3,7 +3,11 @@ package engine
 import "testing"
 
 func TestLoadMemTableInitializesEmptyTable(t *testing.T) {
-	table, err := LoadMemTable()
+	opts := Options{
+		SkipListMaxLevel: 16,
+	}
+
+	table, err := LoadMemTable(&opts)
 	if err != nil {
 		t.Fatalf("LoadMemTable() error = %v", err)
 	}
