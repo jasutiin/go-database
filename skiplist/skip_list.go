@@ -62,5 +62,5 @@ func (s *SkipList[T]) Delete(node *Node[T]) error {
 }
 
 func (s *SkipList[T]) Find(node *Node[T]) (*Node[T], error) {
-
+	return nil, nil
 }
