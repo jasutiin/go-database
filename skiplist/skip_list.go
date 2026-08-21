@@ -30,28 +30,33 @@ func NewSkipList[T any](maxLevel int, compare func(a, b T) int) *SkipList[T] {
 
 // TODO: this insert has logic that depends on the node having a data field, change it later
 func (s *SkipList[T]) Insert(node *Node[T]) error {
-	randomLevel := rand.IntN(s.maxLevel)
+	randomLevel := rand.IntN(s.maxLevel) + 1
+	node.next = make([]*Node[T], randomLevel)
 
 	for level := range randomLevel {
-		currentLevel := s.head.next[level]
+		current := s.head
 
-		if currentLevel.next == nil {
-			currentLevel.next[level] = node
+		if current.next[level] == nil {
+			current.next[level] = node
 		} else {
-			current := s.head.next[level]
 			// while the node is more than the next node
-			for (s.compare(node.data, current.next[level].data)) > 0 {
+			for current.next[level] != nil && s.compare(node.data, current.next[level].data) > 0 {
 				current = current.next[level]
 			}
 
 			// if key already exists, replace its data
-			if s.compare(node.data, current.next[level].data) == 0 {
+			if current.next[level] != nil && s.compare(node.data, current.next[level].data) == 0 {
 				current.next[level].data = node.data
-			} else {
-				node.next[level] = current.next[level]
-				current.next[level] = node
+				return nil
 			}
+
+			node.next[level] = current.next[level]
+			current.next[level] = node
 		}
+	}
+
+	if randomLevel-1 > s.level {
+		s.level = randomLevel - 1
 	}
 
 	return nil
