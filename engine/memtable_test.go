@@ -5,6 +5,7 @@ import "testing"
 func TestLoadMemTableInitializesEmptyTable(t *testing.T) {
 	opts, _ := testOptions(t)
 	opts.SkipListMaxLevel = 16
+	opts.SkipListMaxSize = 1024
 
 	log, err := LoadWAL(opts)
 	if err != nil {

@@ -32,7 +32,11 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 		return nil, err
 	}
 
-	skip := skiplist.New[memTableEntry](opts.SkipListMaxLevel, memTableEntry.compare)
+	skip := skiplist.New[memTableEntry](
+		opts.SkipListMaxLevel,
+		opts.SkipListMaxSize,
+		memTableEntry.compare,
+	)
 
 	for _, value := range entries {
 		entry := memTableEntry{
@@ -46,6 +50,6 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 
 	return &memTable{
 		entries: skip,
-		maxSize: 1024,
+		maxSize: opts.SkipListMaxSize,
 	}, nil
 }
