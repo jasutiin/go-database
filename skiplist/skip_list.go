@@ -36,7 +36,6 @@ func New[T any](maxLevel, maxSize int, compare func(a, b T) int) *SkipList[T] {
 	}
 }
 
-// TODO: this insert has logic that depends on the node having a data field, change it later
 func (s *SkipList[T]) Insert(value T) error {
 	randomLevel := rand.IntN(s.maxLevel) + 1
 	node := &node[T]{
