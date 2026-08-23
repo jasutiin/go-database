@@ -8,6 +8,17 @@ type memTableEntry struct {
 	tombstone bool
 }
 
+func (entry memTableEntry) compare(other memTableEntry) int {
+	switch {
+	case entry.key < other.key:
+		return -1
+	case entry.key > other.key:
+		return 1
+	default:
+		return 0
+	}
+}
+
 type memTable struct {
 	entries *skiplist.SkipList[memTableEntry]
 	size    int
@@ -21,7 +32,7 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 		return nil, err
 	}
 
-	skip := skiplist.New[memTableEntry](opts.SkipListMaxLevel, compareEntries)
+	skip := skiplist.New[memTableEntry](opts.SkipListMaxLevel, memTableEntry.compare)
 
 	for _, value := range entries {
 		entry := memTableEntry{
@@ -37,14 +48,4 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 		entries: skip,
 		maxSize: 1024,
 	}, nil
-}
-
-func compareEntries(a, b memTableEntry) int {
-	if a.key < b.key {
-		return -1
-	}
-	if a.key > b.key {
-		return 1
-	}
-	return 0
 }
