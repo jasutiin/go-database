@@ -73,10 +73,6 @@ func (s *SkipList[T]) Insert(value T) error {
 	return nil
 }
 
-func (s *SkipList[T]) Delete(value T) error {
-	return nil
-}
-
 func (s *SkipList[T]) Find(value T) (T, bool) {
 	current := s.head
 
