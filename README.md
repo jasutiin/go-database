@@ -12,6 +12,8 @@ also looking at the following for inspo:
 
 to run tests, use `go test -v ./...`.
 
+github actions runs `go test ./...` for pushes and pull requests targeting `main`. to prevent failing changes from being merged, add a branch protection rule for `main` in github and require the `test` status check.
+
 <br>
 
 to run the skip list benchmarks, use `go test ./skiplist -run '^$' -bench '.' -benchmem`.
