@@ -10,6 +10,12 @@ type Node[T any] struct {
 	next []*Node[T]
 }
 
+func NewNode[T any](data T) *Node[T] {
+	return &Node[T]{
+		data: data,
+	}
+}
+
 type SkipList[T any] struct {
 	head     *Node[T]
 	level    int

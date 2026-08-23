@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -9,6 +11,19 @@ type wal struct {
 	path string
 	file *os.File
 	size int64
+}
+
+type walEntryKind byte
+
+const (
+	walEntryPut walEntryKind = iota + 1
+	walEntryDelete
+)
+
+type walEntry struct {
+	kind  walEntryKind
+	key   []byte
+	value []byte
 }
 
 func LoadWAL(opts *Options) (*wal, error) {
@@ -37,4 +52,55 @@ func LoadWAL(opts *Options) (*wal, error) {
 		path: walPath,
 		file: file,
 	}, nil
+}
+
+// TODO: check for if wal has unfinished entries, deal with those too
+func (log *wal) GetEntriesFromWAL() ([]*walEntry, error) {
+	file, err := os.Open(log.path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	walEntries := make([]*walEntry, 0)
+
+	for {
+		kindBytes := make([]byte, 1)
+		_, err := file.Read(kindBytes)
+
+		if errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+
+		keyBytes := make([]byte, 8)
+		_, err = file.Read(keyBytes)
+
+		if errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+
+		valueBytes := make([]byte, 8)
+		_, err = file.Read(valueBytes)
+
+		if errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+
+		kind := walEntryKind(kindBytes[0])
+		switch kind {
+		case walEntryPut, walEntryDelete:
+			entries = append(entries, &walEntry{
+				kind:  kind,
+				key:   keyBytes,
+				value: valueBytes,
+			})
+	}
+
+	return walEntries, nil
 }
