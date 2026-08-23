@@ -1,7 +1,9 @@
 package engine
 
 import (
+	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -54,52 +56,54 @@ func LoadWAL(opts *Options) (*wal, error) {
 	}, nil
 }
 
-// TODO: check for if wal has unfinished entries, deal with those too
+const walEntryHeaderSize = 9
+
+// GetEntriesFromWAL reads records encoded as:
+// [kind:1][key length:4][value length:4][key][value].
 func (log *wal) GetEntriesFromWAL() ([]*walEntry, error) {
 	file, err := os.Open(log.path)
-
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
-	walEntries := make([]*walEntry, 0)
+	var walEntries []*walEntry
 
 	for {
-		kindBytes := make([]byte, 1)
-		_, err := file.Read(kindBytes)
-
+		header := make([]byte, walEntryHeaderSize)
+		_, err := io.ReadFull(file, header)
 		if errors.Is(err, io.EOF) {
 			break
-		} else if err != nil {
-			return nil, err
+		}
+		if err != nil {
+			return nil, fmt.Errorf("read WAL entry header: %w", err)
 		}
 
-		keyBytes := make([]byte, 8)
-		_, err = file.Read(keyBytes)
-
-		if errors.Is(err, io.EOF) {
-			break
-		} else if err != nil {
-			return nil, err
+		kind := walEntryKind(header[0])
+		if kind != walEntryPut && kind != walEntryDelete {
+			return nil, fmt.Errorf("unknown WAL entry kind %d", kind)
 		}
 
-		valueBytes := make([]byte, 8)
-		_, err = file.Read(valueBytes)
+		// not using int because it depends on the platform. uint32 ensures
+		// we are reading the same amount of bytes from the file in any platform
+		keyLength := binary.LittleEndian.Uint32(header[1:5])
+		valueLength := binary.LittleEndian.Uint32(header[5:9])
 
-		if errors.Is(err, io.EOF) {
-			break
-		} else if err != nil {
-			return nil, err
+		key := make([]byte, int(keyLength))
+		if _, err := io.ReadFull(file, key); err != nil {
+			return nil, fmt.Errorf("read WAL entry key: %w", err)
 		}
 
-		kind := walEntryKind(kindBytes[0])
-		switch kind {
-		case walEntryPut, walEntryDelete:
-			entries = append(entries, &walEntry{
-				kind:  kind,
-				key:   keyBytes,
-				value: valueBytes,
-			})
+		value := make([]byte, int(valueLength))
+		if _, err := io.ReadFull(file, value); err != nil {
+			return nil, fmt.Errorf("read WAL entry value: %w", err)
+		}
+
+		walEntries = append(walEntries, &walEntry{
+			kind:  kind,
+			key:   key,
+			value: value,
+		})
 	}
 
 	return walEntries, nil
