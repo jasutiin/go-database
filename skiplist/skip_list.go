@@ -73,18 +73,33 @@ func (s *SkipList[T]) Insert(value T) error {
 	return nil
 }
 
+func (s *SkipList[T]) Delete(value T) error {
+	return nil
+}
+
+func (s *SkipList[T]) Find(value T) (T, bool) {
+	current := s.head
+
+	for level := s.level; level >= 0; level-- {
+		for current.next[level] != nil {
+			if s.compare(value, current.next[level].data) > 0 {
+				current = current.next[level]
+			} else if s.compare(value, current.next[level].data) == 0 {
+				return current.next[level].data, true
+			} else {
+				break // go to next level
+			}
+		}
+	}
+
+	var empty T
+	return empty, false
+}
+
 func (s *SkipList[T]) Size() int {
 	return s.size
 }
 
 func (s *SkipList[T]) MaxSize() int {
 	return s.maxSize
-}
-
-func (s *SkipList[T]) Delete(value T) error {
-	return nil
-}
-
-func (s *SkipList[T]) Find(value T) (*node[T], error) {
-	return nil, nil
 }
