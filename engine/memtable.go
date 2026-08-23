@@ -30,7 +30,7 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 			tombstone: false,
 		}
 
-		skip.Insert(skiplist.NewNode(entry))
+		skip.Insert(entry)
 	}
 
 	return &memTable{

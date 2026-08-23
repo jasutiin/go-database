@@ -35,9 +35,12 @@ func New[T any](maxLevel int, compare func(a, b T) int) *SkipList[T] {
 }
 
 // TODO: this insert has logic that depends on the node having a data field, change it later
-func (s *SkipList[T]) Insert(node *Node[T]) error {
+func (s *SkipList[T]) Insert(value T) error {
 	randomLevel := rand.IntN(s.maxLevel) + 1
-	node.next = make([]*Node[T], randomLevel)
+	node := &Node[T]{
+		next: make([]*Node[T], randomLevel),
+	}
+	node.data = value
 
 	for level := range randomLevel {
 		current := s.head
