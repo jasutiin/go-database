@@ -2,22 +2,16 @@ package skiplist
 
 import "math/rand/v2"
 
-type Node[T any] struct {
+type node[T any] struct {
 	data T
 
 	// left-most is the "widest" level
 	// as you go to the right it narrows
-	next []*Node[T]
-}
-
-func NewNode[T any](data T) *Node[T] {
-	return &Node[T]{
-		data: data,
-	}
+	next []*node[T]
 }
 
 type SkipList[T any] struct {
-	head     *Node[T]
+	head     *node[T]
 	level    int
 	maxLevel int
 	compare  func(a, b T) int
@@ -25,8 +19,8 @@ type SkipList[T any] struct {
 
 func New[T any](maxLevel int, compare func(a, b T) int) *SkipList[T] {
 	return &SkipList[T]{
-		head: &Node[T]{
-			next: make([]*Node[T], maxLevel),
+		head: &node[T]{
+			next: make([]*node[T], maxLevel),
 		},
 		level:    0,
 		maxLevel: maxLevel,
@@ -37,8 +31,8 @@ func New[T any](maxLevel int, compare func(a, b T) int) *SkipList[T] {
 // TODO: this insert has logic that depends on the node having a data field, change it later
 func (s *SkipList[T]) Insert(value T) error {
 	randomLevel := rand.IntN(s.maxLevel) + 1
-	node := &Node[T]{
-		next: make([]*Node[T], randomLevel),
+	node := &node[T]{
+		next: make([]*node[T], randomLevel),
 	}
 	node.data = value
 
@@ -71,10 +65,10 @@ func (s *SkipList[T]) Insert(value T) error {
 	return nil
 }
 
-func (s *SkipList[T]) Delete(node *Node[T]) error {
+func (s *SkipList[T]) Delete(value T) error {
 	return nil
 }
 
-func (s *SkipList[T]) Find(node *Node[T]) (*Node[T], error) {
+func (s *SkipList[T]) Find(value T) (*node[T], error) {
 	return nil, nil
 }
