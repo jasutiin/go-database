@@ -11,8 +11,14 @@ type Engine struct {
 }
 
 func Startup(opts *Options) (*Engine, error) {
+	err := opts.Validate()
+
+	if err != nil {
+		return nil, err
+	}
+
 	engine := &Engine{}
-	err := engine.recover(opts)
+	err = engine.recover(opts)
 
 	if err != nil {
 		return nil, err
