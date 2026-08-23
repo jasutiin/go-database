@@ -27,9 +27,9 @@ func levelZeroValues(list *SkipList[int]) []int {
 }
 
 func TestInsertIntoEmptyList(t *testing.T) {
-	list := NewSkipList[int](8, compareInts)
+	list := New[int](8, compareInts)
 
-	err := list.Insert(&Node[int]{data: 10})
+	err := list.Insert(10)
 	if err != nil {
 		t.Fatalf("Insert() error = %v", err)
 	}
@@ -67,10 +67,10 @@ func TestInsertMaintainsSortedOrder(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			list := NewSkipList[int](8, compareInts)
+			list := New[int](8, compareInts)
 
 			for _, value := range test.input {
-				if err := list.Insert(&Node[int]{data: value}); err != nil {
+				if err := list.Insert(value); err != nil {
 					t.Fatalf("Insert(%d) error = %v", value, err)
 				}
 			}
@@ -101,17 +101,13 @@ func compareEntries(a, b testEntry) int {
 }
 
 func TestInsertReplacesDuplicateKey(t *testing.T) {
-	list := NewSkipList[testEntry](8, compareEntries)
+	list := New[testEntry](8, compareEntries)
 
-	if err := list.Insert(&Node[testEntry]{
-		data: testEntry{key: 1, value: "old"},
-	}); err != nil {
+	if err := list.Insert(testEntry{key: 1, value: "old"}); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := list.Insert(&Node[testEntry]{
-		data: testEntry{key: 1, value: "new"},
-	}); err != nil {
+	if err := list.Insert(testEntry{key: 1, value: "new"}); err != nil {
 		t.Fatal(err)
 	}
 
