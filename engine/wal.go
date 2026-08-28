@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"os"
 	"path/filepath"
@@ -13,19 +14,6 @@ type wal struct {
 	path string
 	file *os.File
 	size int64
-}
-
-type walEntryKind byte
-
-const (
-	walEntryPut walEntryKind = iota + 1
-	walEntryDelete
-)
-
-type walEntry struct {
-	kind  walEntryKind
-	key   []byte
-	value []byte
 }
 
 func LoadWAL(opts *Options) (*wal, error) {
@@ -56,10 +44,72 @@ func LoadWAL(opts *Options) (*wal, error) {
 	}, nil
 }
 
-const walEntryHeaderSize = 9
+type walEntryKind byte
 
-// GetEntriesFromWAL reads records encoded as:
-// [kind:1][key length:4][value length:4][key][value].
+const (
+	walEntryPut walEntryKind = iota + 1
+	walEntryDelete
+)
+
+type walEntry struct {
+	crc         uint32
+	logNumber   uint32
+	kind        walEntryKind
+	keyLength   uint16
+	valueLength uint16
+	key         []byte
+	value       []byte
+}
+
+const walEntryHeaderSize = 13
+
+// [crc:4][log number:4][kind:1][key length:4][value length:4][key][value].
+func parseWALEntry(file *os.File) (*walEntry, error) {
+	header := make([]byte, walEntryHeaderSize)
+	_, err := io.ReadFull(file, header)
+	if errors.Is(err, io.EOF) {
+		return nil, io.EOF
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read WAL entry header: %w", err)
+	}
+
+	kind := walEntryKind(header[0])
+	if kind != walEntryPut && kind != walEntryDelete {
+		return nil, fmt.Errorf("unknown WAL entry kind %d", kind)
+	}
+
+	// not using int because it depends on the platform. uint32 ensures
+	// we are reading the same amount of bytes from the file in any platform
+	crc := binary.LittleEndian.Uint32(header[1:5])
+	if crc != crc32.ChecksumIEEE(header[5:13]) {
+		return nil, fmt.Errorf("invalid CRC")
+	}
+
+	logNumber := binary.LittleEndian.Uint32(header[5:9])
+	keyLength := binary.LittleEndian.Uint16(header[9:13])
+	valueLength := binary.LittleEndian.Uint16(header[13:17])
+
+	key := make([]byte, int(keyLength))
+	if _, err := io.ReadFull(file, key); err != nil {
+		return nil, fmt.Errorf("read WAL entry key: %w", err)
+	}
+
+	value := make([]byte, int(valueLength))
+	if _, err := io.ReadFull(file, value); err != nil {
+		return nil, fmt.Errorf("read WAL entry value: %w", err)
+	}
+
+	return &walEntry{
+		logNumber:   logNumber,
+		kind:        kind,
+		keyLength:   keyLength,
+		valueLength: valueLength,
+		key:         key,
+		value:       value,
+	}, nil
+}
+
 func (log *wal) GetEntriesFromWAL() ([]*walEntry, error) {
 	file, err := os.Open(log.path)
 	if err != nil {
@@ -70,40 +120,15 @@ func (log *wal) GetEntriesFromWAL() ([]*walEntry, error) {
 	var walEntries []*walEntry
 
 	for {
-		header := make([]byte, walEntryHeaderSize)
-		_, err := io.ReadFull(file, header)
+		entry, err := parseWALEntry(file)
 		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("read WAL entry header: %w", err)
+			return nil, fmt.Errorf("parse WAL entry: %w", err)
 		}
 
-		kind := walEntryKind(header[0])
-		if kind != walEntryPut && kind != walEntryDelete {
-			return nil, fmt.Errorf("unknown WAL entry kind %d", kind)
-		}
-
-		// not using int because it depends on the platform. uint32 ensures
-		// we are reading the same amount of bytes from the file in any platform
-		keyLength := binary.LittleEndian.Uint32(header[1:5])
-		valueLength := binary.LittleEndian.Uint32(header[5:9])
-
-		key := make([]byte, int(keyLength))
-		if _, err := io.ReadFull(file, key); err != nil {
-			return nil, fmt.Errorf("read WAL entry key: %w", err)
-		}
-
-		value := make([]byte, int(valueLength))
-		if _, err := io.ReadFull(file, value); err != nil {
-			return nil, fmt.Errorf("read WAL entry value: %w", err)
-		}
-
-		walEntries = append(walEntries, &walEntry{
-			kind:  kind,
-			key:   key,
-			value: value,
-		})
+		walEntries = append(walEntries, entry)
 	}
 
 	return walEntries, nil
