@@ -6,6 +6,34 @@ import (
 	"testing"
 )
 
+type testSkipList[T any] struct {
+	*SkipList[T]
+	levels []int
+	index  int
+}
+
+func newTestSkipList[T any](
+	maxLevel int,
+	maxSize int,
+	compare func(a, b T) int,
+) *testSkipList[T] {
+	return &testSkipList[T]{
+		SkipList: New(maxLevel, maxSize, compare),
+		levels:   []int{1, 3, 2, 1},
+	}
+}
+
+func (s *testSkipList[T]) Insert(value T) error {
+	level := s.levels[s.index%len(s.levels)]
+	s.index++
+
+	if level > s.maxLevel {
+		level = s.maxLevel
+	}
+
+	return s.insertAtLevel(value, level)
+}
+
 func compareInts(a, b int) int {
 	switch {
 	case a < b:
@@ -17,10 +45,14 @@ func compareInts(a, b int) int {
 	}
 }
 
-func levelZeroValues(list *SkipList[int]) []int {
+func levelZeroValues(list *testSkipList[int]) []int {
+	return valuesAtLevel(list, 0)
+}
+
+func valuesAtLevel(list *testSkipList[int], level int) []int {
 	var values []int
 
-	for current := list.head.next[0]; current != nil; current = current.next[0] {
+	for current := list.head.next[level]; current != nil; current = current.next[level] {
 		values = append(values, current.data)
 	}
 
@@ -28,7 +60,7 @@ func levelZeroValues(list *SkipList[int]) []int {
 }
 
 func TestInsertIntoEmptyList(t *testing.T) {
-	list := New[int](8, 100, compareInts)
+	list := newTestSkipList[int](8, 100, compareInts)
 
 	err := list.Insert(10)
 	if err != nil {
@@ -43,8 +75,34 @@ func TestInsertIntoEmptyList(t *testing.T) {
 	}
 }
 
+func TestInsertUsesGeneratedLevels(t *testing.T) {
+	list := newTestSkipList[int](8, 100, compareInts)
+
+	for _, value := range []int{10, 20, 15} {
+		if err := list.Insert(value); err != nil {
+			t.Fatalf("Insert(%d) error = %v", value, err)
+		}
+	}
+
+	wantByLevel := [][]int{
+		{10, 15, 20},
+		{15, 20},
+		{20},
+	}
+
+	for level, want := range wantByLevel {
+		if got := valuesAtLevel(list, level); !slices.Equal(got, want) {
+			t.Fatalf("level %d values = %v, want %v", level, got, want)
+		}
+	}
+
+	if list.level != 2 {
+		t.Fatalf("active level = %d, want 2", list.level)
+	}
+}
+
 func TestInsertTracksUniqueValues(t *testing.T) {
-	list := New[int](8, 100, compareInts)
+	list := newTestSkipList[int](8, 100, compareInts)
 
 	if got := list.Size(); got != 0 {
 		t.Fatalf("initial size = %d, want 0", got)
@@ -70,7 +128,7 @@ func TestInsertTracksUniqueValues(t *testing.T) {
 }
 
 func TestInsertRejectsNewValueAtMaximumSize(t *testing.T) {
-	list := New[int](8, 2, compareInts)
+	list := newTestSkipList[int](8, 2, compareInts)
 
 	if got := list.MaxSize(); got != 2 {
 		t.Fatalf("maximum size = %d, want 2", got)
@@ -93,7 +151,7 @@ func TestInsertRejectsNewValueAtMaximumSize(t *testing.T) {
 }
 
 func TestInsertAllowsUpdateAtMaximumSize(t *testing.T) {
-	list := New[testEntry](8, 1, compareEntries)
+	list := newTestSkipList[testEntry](8, 1, compareEntries)
 
 	if err := list.Insert(testEntry{key: 1, value: "old"}); err != nil {
 		t.Fatal(err)
@@ -136,7 +194,7 @@ func TestInsertMaintainsSortedOrder(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			list := New[int](8, 100, compareInts)
+			list := newTestSkipList[int](8, 100, compareInts)
 
 			for _, value := range test.input {
 				if err := list.Insert(value); err != nil {
@@ -170,7 +228,7 @@ func compareEntries(a, b testEntry) int {
 }
 
 func TestInsertReplacesDuplicateKey(t *testing.T) {
-	list := New[testEntry](8, 100, compareEntries)
+	list := newTestSkipList[testEntry](8, 100, compareEntries)
 
 	if err := list.Insert(testEntry{key: 1, value: "old"}); err != nil {
 		t.Fatal(err)
