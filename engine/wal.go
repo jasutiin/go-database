@@ -108,3 +108,8 @@ func (log *wal) GetEntriesFromWAL() ([]*walEntry, error) {
 
 	return walEntries, nil
 }
+
+func (log *wal) Insert(key, val []byte, isTombstone bool) error {
+	file, err := os.Open(log.path)
+	return nil
+}
