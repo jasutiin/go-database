@@ -54,9 +54,10 @@ func (engine *Engine) Get(key []byte) {
 }
 
 func (engine *Engine) Put(key []byte, val []byte) {
-	fmt.Println("Put() not implemented")
+	engine.writeAheadLog.Insert(key, val, false)
 }
 
 func (engine *Engine) Delete(key []byte) {
-	fmt.Println("Delete() not implemented")
+	x := make([]byte, 3) // TODO: replace this later
+	engine.writeAheadLog.Insert(key, x, true)
 }
