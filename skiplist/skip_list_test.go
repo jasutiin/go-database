@@ -148,6 +148,13 @@ func TestInsertRejectsNewValueAtMaximumSize(t *testing.T) {
 	if got := list.Size(); got != 2 {
 		t.Fatalf("size after rejected insert = %d, want 2", got)
 	}
+
+	if got := valuesAtLevel(list, 0); !slices.Equal(got, []int{1, 2}) {
+		t.Fatalf("level 0 values = %v, want [1 2]", got)
+	}
+	if got := valuesAtLevel(list, 1); !slices.Equal(got, []int{2}) {
+		t.Fatalf("level 1 values = %v, want [2]", got)
+	}
 }
 
 func TestInsertAllowsUpdateAtMaximumSize(t *testing.T) {
@@ -253,5 +260,12 @@ func TestInsertReplacesDuplicateKey(t *testing.T) {
 
 	if got := list.Size(); got != 1 {
 		t.Fatalf("size = %d, want 1", got)
+	}
+
+	if list.head.next[1] != nil || list.head.next[2] != nil {
+		t.Fatal("duplicate key created nodes on upper levels")
+	}
+	if list.level != 0 {
+		t.Fatalf("active level = %d, want 0", list.level)
 	}
 }

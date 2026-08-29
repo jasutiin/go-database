@@ -44,34 +44,43 @@ func (s *SkipList[T]) Insert(value T) error {
 }
 
 func (s *SkipList[T]) insertAtLevel(value T, nodeMaxLevel int) error {
+	update := make([]*node[T], s.maxLevel)
+	current := s.head
+
+	for level := s.level; level >= 0; level-- {
+		for current.next[level] != nil && s.compare(value, current.next[level].data) > 0 {
+			current = current.next[level]
+		}
+
+		update[level] = current
+	}
+
+	existing := update[0].next[0]
+	if existing != nil && s.compare(value, existing.data) == 0 {
+		existing.data = value
+		return nil
+	}
+
+	if s.maxSize > 0 && s.size >= s.maxSize {
+		return ErrMaxSizeReached
+	}
+
+	if nodeMaxLevel-1 > s.level {
+		for level := s.level + 1; level < nodeMaxLevel; level++ {
+			update[level] = s.head
+		}
+
+		s.level = nodeMaxLevel - 1
+	}
+
 	node := &node[T]{
 		data: value,
 		next: make([]*node[T], nodeMaxLevel),
 	}
 
-	current := s.head
-	// start at the level with the largest gaps
-	for level := nodeMaxLevel - 1; level >= 0; level-- {
-		for current.next[level] != nil && s.compare(node.data, current.next[level].data) > 0 {
-			current = current.next[level]
-		}
-
-		// if key already exists, replace its data
-		if current.next[level] != nil && s.compare(node.data, current.next[level].data) == 0 {
-			current.next[level].data = node.data
-			return nil
-		}
-
-		if level == 0 && s.maxSize > 0 && s.size >= s.maxSize {
-			return ErrMaxSizeReached
-		}
-
-		node.next[level] = current.next[level]
-		current.next[level] = node
-	}
-
-	if nodeMaxLevel-1 > s.level {
-		s.level = nodeMaxLevel - 1
+	for level := range nodeMaxLevel {
+		node.next[level] = update[level].next[level]
+		update[level].next[level] = node
 	}
 
 	s.size++
