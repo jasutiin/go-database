@@ -53,3 +53,7 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 		maxSize: opts.SkipListMaxSize,
 	}, nil
 }
+
+func (table *memTable) Insert(key, value []byte, tombstone bool) error {
+	return nil
+}

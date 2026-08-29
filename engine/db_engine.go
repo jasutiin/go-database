@@ -45,19 +45,41 @@ func (engine *Engine) recover(opts *Options) error {
 	return nil
 }
 
-func (engine *Engine) Stop() {
+func (engine *Engine) Stop() error {
 	fmt.Println("Stop() not implemented")
+	return nil
 }
 
-func (engine *Engine) Get(key []byte) {
+func (engine *Engine) Get(key []byte) error {
 	fmt.Println("Get() not implemented")
+	return nil
 }
 
-func (engine *Engine) Put(key []byte, val []byte) {
-	engine.writeAheadLog.Insert(key, val, false)
+func (engine *Engine) Put(key []byte, val []byte) error {
+	err := engine.writeAheadLog.Insert(key, val, false)
+	if err != nil {
+		return err
+	}
+
+	err = engine.table.Insert(key, val, false)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (engine *Engine) Delete(key []byte) {
+func (engine *Engine) Delete(key []byte) error {
 	x := make([]byte, 3) // TODO: replace this later
-	engine.writeAheadLog.Insert(key, x, true)
+	err := engine.writeAheadLog.Insert(key, x, true)
+	if err != nil {
+		return err
+	}
+
+	err = engine.table.Insert(key, x, true)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
