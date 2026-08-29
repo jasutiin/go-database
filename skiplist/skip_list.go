@@ -8,8 +8,7 @@ import (
 type node[T any] struct {
 	data T
 
-	// left-most is the "widest" level
-	// as you go to the right it narrows
+	// smallest index is the level with no gaps
 	next []*node[T]
 }
 
@@ -50,9 +49,9 @@ func (s *SkipList[T]) insertAtLevel(value T, nodeMaxLevel int) error {
 		next: make([]*node[T], nodeMaxLevel),
 	}
 
-	for level := range nodeMaxLevel {
-		current := s.head
-
+	current := s.head
+	// start at the level with the largest gaps
+	for level := nodeMaxLevel - 1; level >= 0; level-- {
 		for current.next[level] != nil && s.compare(node.data, current.next[level].data) > 0 {
 			current = current.next[level]
 		}
