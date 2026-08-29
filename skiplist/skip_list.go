@@ -36,17 +36,23 @@ func New[T any](maxLevel, maxSize int, compare func(a, b T) int) *SkipList[T] {
 	}
 }
 
-func (s *SkipList[T]) Insert(value T) error {
-	randomLevel := rand.IntN(s.maxLevel) + 1
-	node := &node[T]{
-		next: make([]*node[T], randomLevel),
-	}
-	node.data = value
+func randomLevel(maxLevel int) int {
+	return rand.IntN(maxLevel) + 1
+}
 
-	for level := range randomLevel {
+func (s *SkipList[T]) Insert(value T) error {
+	return s.insertAtLevel(value, randomLevel(s.maxLevel))
+}
+
+func (s *SkipList[T]) insertAtLevel(value T, nodeMaxLevel int) error {
+	node := &node[T]{
+		data: value,
+		next: make([]*node[T], nodeMaxLevel),
+	}
+
+	for level := range nodeMaxLevel {
 		current := s.head
 
-		// while the node is more than the next node
 		for current.next[level] != nil && s.compare(node.data, current.next[level].data) > 0 {
 			current = current.next[level]
 		}
@@ -65,8 +71,8 @@ func (s *SkipList[T]) Insert(value T) error {
 		current.next[level] = node
 	}
 
-	if randomLevel-1 > s.level {
-		s.level = randomLevel - 1
+	if nodeMaxLevel-1 > s.level {
+		s.level = nodeMaxLevel - 1
 	}
 
 	s.size++
