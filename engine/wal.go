@@ -63,7 +63,7 @@ type walEntry struct {
 
 const walEntryHeaderSize = 13
 
-// [crc:4][log number:4][kind:1][key length:4][value length:4][key][value].
+// [crc:4][log number:4][kind:1][key length:2][value length:2][key][value].
 func parseWALEntry(file *os.File) (*walEntry, error) {
 	header := make([]byte, walEntryHeaderSize)
 	_, err := io.ReadFull(file, header)
@@ -74,21 +74,15 @@ func parseWALEntry(file *os.File) (*walEntry, error) {
 		return nil, fmt.Errorf("read WAL entry header: %w", err)
 	}
 
-	kind := walEntryKind(header[0])
+	crc := binary.LittleEndian.Uint32(header[0:4])
+	logNumber := binary.LittleEndian.Uint32(header[4:8])
+	kind := walEntryKind(header[8])
+	keyLength := binary.LittleEndian.Uint16(header[9:11])
+	valueLength := binary.LittleEndian.Uint16(header[11:13])
+
 	if kind != walEntryPut && kind != walEntryDelete {
 		return nil, fmt.Errorf("unknown WAL entry kind %d", kind)
 	}
-
-	// not using int because it depends on the platform. uint32 ensures
-	// we are reading the same amount of bytes from the file in any platform
-	crc := binary.LittleEndian.Uint32(header[1:5])
-	if crc != crc32.ChecksumIEEE(header[5:13]) {
-		return nil, fmt.Errorf("invalid CRC")
-	}
-
-	logNumber := binary.LittleEndian.Uint32(header[5:9])
-	keyLength := binary.LittleEndian.Uint16(header[9:13])
-	valueLength := binary.LittleEndian.Uint16(header[13:17])
 
 	key := make([]byte, int(keyLength))
 	if _, err := io.ReadFull(file, key); err != nil {
@@ -100,7 +94,16 @@ func parseWALEntry(file *os.File) (*walEntry, error) {
 		return nil, fmt.Errorf("read WAL entry value: %w", err)
 	}
 
+	checksum := crc32.NewIEEE()
+	_, _ = checksum.Write(header[4:])
+	_, _ = checksum.Write(key)
+	_, _ = checksum.Write(value)
+	if crc != checksum.Sum32() {
+		return nil, fmt.Errorf("invalid CRC")
+	}
+
 	return &walEntry{
+		crc:         crc,
 		logNumber:   logNumber,
 		kind:        kind,
 		keyLength:   keyLength,
