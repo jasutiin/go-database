@@ -51,5 +51,9 @@ func testOptions(t *testing.T) (*Options, string) {
 		}
 	})
 
-	return &Options{DbName: dbName}, dbPath
+	return &Options{
+		DbName:           dbName,
+		SkipListMaxLevel: 16,
+		SkipListMaxSize:  1024,
+	}, dbPath
 }
