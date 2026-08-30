@@ -38,22 +38,35 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 		memTableEntry.compare,
 	)
 
-	for _, value := range entries {
-		entry := memTableEntry{
-			key:       string(value.key),
-			value:     value.value,
-			tombstone: false,
-		}
-
-		skip.Insert(entry)
-	}
-
-	return &memTable{
+	table := &memTable{
 		entries: skip,
 		maxSize: opts.SkipListMaxSize,
-	}, nil
+	}
+
+	for _, value := range entries {
+		if err := table.Insert(
+			value.key,
+			value.value,
+			value.kind == walEntryDelete,
+		); err != nil {
+			return nil, err
+		}
+	}
+
+	return table, nil
 }
 
 func (table *memTable) Insert(key, value []byte, tombstone bool) error {
+	entry := memTableEntry{
+		key:       string(key),
+		value:     append([]byte(nil), value...),
+		tombstone: tombstone,
+	}
+
+	if err := table.entries.Insert(entry); err != nil {
+		return err
+	}
+
+	table.size = table.entries.Size()
 	return nil
 }

@@ -37,10 +37,16 @@ func LoadWAL(opts *Options) (*wal, error) {
 		return nil, err
 	}
 
-	// TODO: set size for wal?
+	info, err := file.Stat()
+	if err != nil {
+		file.Close()
+		return nil, err
+	}
+
 	return &wal{
 		path: walPath,
 		file: file,
+		size: info.Size(),
 	}, nil
 }
 
@@ -137,7 +143,68 @@ func (log *wal) GetEntriesFromWAL() ([]*walEntry, error) {
 	return walEntries, nil
 }
 
-func (log *wal) Insert(key, val []byte, isTombstone bool) error {
-	file, err := os.Open(log.path)
+func (log *wal) Insert(key, value []byte, tombstone bool) error {
+	kind := walEntryPut
+	if tombstone {
+		kind = walEntryDelete
+	}
+
+	entry := &walEntry{
+		kind:  kind,
+		key:   key,
+		value: value,
+	}
+
+	data, err := encodeWALEntry(entry)
+	if err != nil {
+		return err
+	}
+
+	written, err := log.file.Write(data)
+	if err != nil {
+		return fmt.Errorf("append WAL entry: %w", err)
+	}
+	if written != len(data) {
+		return io.ErrShortWrite
+	}
+
+	if err := log.file.Sync(); err != nil {
+		return fmt.Errorf("sync WAL: %w", err)
+	}
+
+	log.size += int64(written)
 	return nil
+}
+
+func encodeWALEntry(entry *walEntry) ([]byte, error) {
+	const maxUint16 = int(^uint16(0))
+
+	if len(entry.key) > maxUint16 {
+		return nil, fmt.Errorf("WAL key is too large: %d bytes", len(entry.key))
+	}
+	if len(entry.value) > maxUint16 {
+		return nil, fmt.Errorf("WAL value is too large: %d bytes", len(entry.value))
+	}
+
+	entry.keyLength = uint16(len(entry.key))
+	entry.valueLength = uint16(len(entry.value))
+
+	header := make([]byte, walEntryHeaderSize)
+	binary.LittleEndian.PutUint32(header[4:8], entry.logNumber)
+	header[8] = byte(entry.kind)
+	binary.LittleEndian.PutUint16(header[9:11], entry.keyLength)
+	binary.LittleEndian.PutUint16(header[11:13], entry.valueLength)
+
+	checksum := crc32.NewIEEE()
+	_, _ = checksum.Write(header[4:])
+	_, _ = checksum.Write(entry.key)
+	_, _ = checksum.Write(entry.value)
+	entry.crc = checksum.Sum32()
+	binary.LittleEndian.PutUint32(header[0:4], entry.crc)
+
+	data := make([]byte, 0, len(header)+len(entry.key)+len(entry.value))
+	data = append(data, header...)
+	data = append(data, entry.key...)
+	data = append(data, entry.value...)
+	return data, nil
 }
