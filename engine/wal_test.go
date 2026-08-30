@@ -34,6 +34,48 @@ func TestLoadWALCreatesFile(t *testing.T) {
 	}
 }
 
+func TestWALInsertAppendsEntries(t *testing.T) {
+	opts, _ := testOptions(t)
+
+	log, err := LoadWAL(opts)
+	if err != nil {
+		t.Fatalf("LoadWAL() error = %v", err)
+	}
+	defer log.file.Close()
+
+	if err := log.Insert([]byte("name"), []byte("Alice"), false); err != nil {
+		t.Fatalf("Insert() put error = %v", err)
+	}
+	if err := log.Insert([]byte("deleted"), nil, true); err != nil {
+		t.Fatalf("Insert() delete error = %v", err)
+	}
+
+	entries, err := log.GetEntriesFromWAL()
+	if err != nil {
+		t.Fatalf("GetEntriesFromWAL() error = %v", err)
+	}
+
+	if len(entries) != 2 {
+		t.Fatalf("entry count = %d, want 2", len(entries))
+	}
+
+	if entries[0].kind != walEntryPut ||
+		!bytes.Equal(entries[0].key, []byte("name")) ||
+		!bytes.Equal(entries[0].value, []byte("Alice")) {
+		t.Fatalf("put entry = %+v", entries[0])
+	}
+
+	if entries[1].kind != walEntryDelete ||
+		!bytes.Equal(entries[1].key, []byte("deleted")) ||
+		len(entries[1].value) != 0 {
+		t.Fatalf("delete entry = %+v", entries[1])
+	}
+
+	if log.size <= 0 {
+		t.Fatalf("WAL size = %d, want positive size", log.size)
+	}
+}
+
 func TestGetEntriesFromWALReadsVariableLengthEntries(t *testing.T) {
 	opts, _ := testOptions(t)
 
