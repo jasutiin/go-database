@@ -35,6 +35,41 @@ func TestEngineStartupInitializesStorage(t *testing.T) {
 	}
 }
 
+func TestEnginePutAppendsWALAndMemTable(t *testing.T) {
+	opts, _ := testOptions(t)
+	opts.SkipListMaxLevel = 16
+	opts.SkipListMaxSize = 1024
+
+	db, err := Startup(opts)
+	if err != nil {
+		t.Fatalf("Startup() error = %v", err)
+	}
+	defer db.writeAheadLog.file.Close()
+
+	if err := db.Put([]byte("name"), []byte("Alice")); err != nil {
+		t.Fatalf("Put() error = %v", err)
+	}
+
+	walEntries, err := db.writeAheadLog.GetEntriesFromWAL()
+	if err != nil {
+		t.Fatalf("GetEntriesFromWAL() error = %v", err)
+	}
+	if len(walEntries) != 1 {
+		t.Fatalf("WAL entry count = %d, want 1", len(walEntries))
+	}
+	if string(walEntries[0].key) != "name" || string(walEntries[0].value) != "Alice" {
+		t.Fatalf("WAL entry key/value = %q/%q", walEntries[0].key, walEntries[0].value)
+	}
+
+	entry, found := db.table.entries.Find(memTableEntry{key: "name"})
+	if !found {
+		t.Fatal("memtable entry was not found")
+	}
+	if string(entry.value) != "Alice" {
+		t.Fatalf("memtable value = %q, want %q", entry.value, "Alice")
+	}
+}
+
 func testOptions(t *testing.T) (*Options, string) {
 	t.Helper()
 
