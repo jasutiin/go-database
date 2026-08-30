@@ -32,8 +32,8 @@ func TestMemTableInsertStoresValue(t *testing.T) {
 	if entry.tombstone {
 		t.Fatal("inserted value is marked as a tombstone")
 	}
-	if table.size != 1 {
-		t.Fatalf("size = %d, want 1", table.size)
+	if table.Size() != 1 {
+		t.Fatalf("size = %d, want 1", table.Size())
 	}
 }
 
@@ -57,11 +57,11 @@ func TestLoadMemTableInitializesEmptyTable(t *testing.T) {
 		t.Fatal("LoadMemTable() entries = nil")
 	}
 
-	if table.size != 0 {
-		t.Fatalf("LoadMemTable() size = %d, want 0", table.size)
+	if table.Size() != 0 {
+		t.Fatalf("LoadMemTable() size = %d, want 0", table.Size())
 	}
 
-	if table.maxSize != 1024 {
-		t.Fatalf("LoadMemTable() maxSize = %d, want 1024", table.maxSize)
+	if table.MaxSize() != 1024 {
+		t.Fatalf("LoadMemTable() maxSize = %d, want 1024", table.MaxSize())
 	}
 }
