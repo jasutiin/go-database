@@ -8,7 +8,12 @@ import (
 )
 
 func main() {
-	opts := &engine.Options{DbName: "name", SkipListMaxLevel: 10, SkipListMaxSize: 1000}
+	opts := &engine.Options{
+		DbName:           "name",
+		StorageType:      engine.StorageLSM,
+		SkipListMaxLevel: 10,
+		SkipListMaxSize:  1000,
+	}
 	db, err := engine.Startup(opts)
 
 	if err != nil {
