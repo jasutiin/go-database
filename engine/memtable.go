@@ -21,8 +21,6 @@ func (entry memTableEntry) compare(other memTableEntry) int {
 
 type memTable struct {
 	entries *skiplist.SkipList[memTableEntry]
-	size    int
-	maxSize int
 }
 
 func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
@@ -38,18 +36,37 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 		memTableEntry.compare,
 	)
 
-	for _, value := range entries {
-		entry := memTableEntry{
-			key:       string(value.key),
-			value:     value.value,
-			tombstone: false,
-		}
-
-		skip.Insert(entry)
+	table := &memTable{
+		entries: skip,
 	}
 
-	return &memTable{
-		entries: skip,
-		maxSize: opts.SkipListMaxSize,
-	}, nil
+	for _, value := range entries {
+		if err := table.Insert(
+			value.key,
+			value.value,
+			value.kind == walEntryDelete,
+		); err != nil {
+			return nil, err
+		}
+	}
+
+	return table, nil
+}
+
+func (table *memTable) Insert(key, value []byte, tombstone bool) error {
+	entry := memTableEntry{
+		key:       string(key),
+		value:     append([]byte(nil), value...),
+		tombstone: tombstone,
+	}
+
+	return table.entries.Insert(entry)
+}
+
+func (table *memTable) Size() int {
+	return table.entries.Size()
+}
+
+func (table *memTable) MaxSize() int {
+	return table.entries.MaxSize()
 }
