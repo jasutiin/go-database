@@ -143,7 +143,6 @@ func (log *wal) GetEntriesFromWAL() ([]*walEntry, error) {
 	return walEntries, nil
 }
 
-<<<<<<< HEAD
 func (log *wal) Insert(key, value []byte, tombstone bool) error {
 	kind := walEntryPut
 	if tombstone {
@@ -209,9 +208,3 @@ func encodeWALEntry(entry *walEntry) ([]byte, error) {
 	data = append(data, entry.value...)
 	return data, nil
 }
-=======
-func (log *wal) Insert(key, val []byte, isTombstone bool) error {
-	file, err := os.Open(log.path)
-	return nil
-}
->>>>>>> cf53296 (start implementing insert flow)
