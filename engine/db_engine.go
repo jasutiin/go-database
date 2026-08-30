@@ -1,85 +1,47 @@
 package engine
 
-import (
-	"fmt"
-)
+import "github.com/jasutiin/go-database/engine/lsm"
+
+type storageEngine interface {
+	Stop() error
+	Get(key []byte) error
+	Put(key, value []byte) error
+	Delete(key []byte) error
+}
 
 type Engine struct {
-	table         *memTable
-	writeAheadLog *wal
-	sstables      []*sst
+	storage storageEngine
 }
 
 func Startup(opts *Options) (*Engine, error) {
-	err := opts.Validate()
+	if err := opts.Validate(); err != nil {
+		return nil, err
+	}
 
+	storage, err := lsm.Startup(&lsm.Options{
+		DbName:           opts.DbName,
+		SkipListMaxLevel: opts.SkipListMaxLevel,
+		SkipListMaxSize:  opts.SkipListMaxSize,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	engine := &Engine{}
-	err = engine.recover(opts)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return engine, nil
-}
-
-func (engine *Engine) recover(opts *Options) error {
-	log, err := LoadWAL(opts)
-
-	if err != nil {
-		return err
-	}
-
-	table, err := LoadMemTable(opts, log)
-
-	if err != nil {
-		return err
-	}
-
-	engine.table = table
-	engine.writeAheadLog = log
-	return nil
+	return &Engine{storage: storage}, nil
 }
 
 func (engine *Engine) Stop() error {
-	fmt.Println("Stop() not implemented")
-	return nil
+	return engine.storage.Stop()
 }
 
 func (engine *Engine) Get(key []byte) error {
-	fmt.Println("Get() not implemented")
-	return nil
+	return engine.storage.Get(key)
 }
 
-func (engine *Engine) Put(key []byte, val []byte) error {
-	err := engine.writeAheadLog.Insert(key, val, false)
-	if err != nil {
-		return err
-	}
-
-	err = engine.table.Insert(key, val, false)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (engine *Engine) Put(key, value []byte) error {
+	return engine.storage.Put(key, value)
 }
 
 func (engine *Engine) Delete(key []byte) error {
-	x := make([]byte, 3) // TODO: replace this later
-	err := engine.writeAheadLog.Insert(key, x, true)
-	if err != nil {
-		return err
-	}
-
-	err = engine.table.Insert(key, x, true)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return engine.storage.Delete(key)
 }

@@ -1,4 +1,4 @@
-package engine
+package lsm
 
 import "github.com/jasutiin/go-database/skiplist"
 
