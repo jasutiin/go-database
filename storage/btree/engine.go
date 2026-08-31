@@ -1,4 +1,4 @@
-package btree
+package engine
 
 import "sync"
 
@@ -22,7 +22,7 @@ func (engine *Engine) Get(key []byte) error {
 	return nil
 }
 
-func (engine *Engine) Put(key, value []byte) error {
+func (engine *Engine) Insert(key, value []byte) error {
 	return nil
 }
 

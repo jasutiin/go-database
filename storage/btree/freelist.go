@@ -1,4 +1,4 @@
-package btree
+package engine
 
 type freelist struct {
 	pager *pager

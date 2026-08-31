@@ -1,4 +1,4 @@
-package lsm
+package engine
 
 import "fmt"
 
@@ -51,7 +51,7 @@ func (engine *Engine) Get(key []byte) error {
 	return nil
 }
 
-func (engine *Engine) Put(key, value []byte) error {
+func (engine *Engine) Insert(key, value []byte) error {
 	if err := engine.writeAheadLog.Insert(key, value, false); err != nil {
 		return err
 	}

@@ -1,6 +1,6 @@
-package lsm
+package engine
 
-import "github.com/jasutiin/go-database/skiplist"
+import "github.com/jasutiin/go-database/storage/skiplist"
 
 type memTableEntry struct {
 	key       string

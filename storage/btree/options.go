@@ -1,4 +1,4 @@
-package btree
+package engine
 
 type Options struct {
 	DbName   string

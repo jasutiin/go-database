@@ -1,4 +1,4 @@
-package lsm
+package engine
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func TestEngineStartupInitializesStorage(t *testing.T) {
 	}
 }
 
-func TestEnginePutAppendsWALAndMemTable(t *testing.T) {
+func TestEngineInsertAppendsWALAndMemTable(t *testing.T) {
 	opts, _ := testOptions(t)
 	opts.SkipListMaxLevel = 16
 	opts.SkipListMaxSize = 1024
@@ -46,8 +46,8 @@ func TestEnginePutAppendsWALAndMemTable(t *testing.T) {
 	}
 	defer db.writeAheadLog.file.Close()
 
-	if err := db.Put([]byte("name"), []byte("Alice")); err != nil {
-		t.Fatalf("Put() error = %v", err)
+	if err := db.Insert([]byte("name"), []byte("Alice")); err != nil {
+		t.Fatalf("Insert() error = %v", err)
 	}
 
 	walEntries, err := db.writeAheadLog.GetEntriesFromWAL()

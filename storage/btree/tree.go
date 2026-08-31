@@ -1,4 +1,4 @@
-package btree
+package engine
 
 type tree struct {
 	pager *pager
