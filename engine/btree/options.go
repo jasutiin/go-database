@@ -1,5 +1,7 @@
 package btree
 
 type Options struct {
-	DbName string
+	DbName   string
+	PageSize uint32
+	Sync     bool
 }

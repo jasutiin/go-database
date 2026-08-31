@@ -1,6 +1,14 @@
 package btree
 
-type Engine struct{}
+import "sync"
+
+type Engine struct {
+	mu       sync.RWMutex
+	pager    *pager
+	tree     *tree
+	freelist *freelist
+	closed   bool
+}
 
 func Startup(opts *Options) (*Engine, error) {
 	return &Engine{}, nil
