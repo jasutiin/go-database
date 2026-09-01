@@ -1,6 +1,6 @@
 package lsm
 
-import "fmt"
+import errs "github.com/jasutiin/go-database/engine/errors"
 
 type Engine struct {
 	table         *memTable
@@ -47,8 +47,12 @@ func (engine *Engine) Stop() error {
 }
 
 func (engine *Engine) Get(key []byte) ([]byte, error) {
-	fmt.Println("Get() not implemented")
-	return nil, nil
+	value, tombstone, found := engine.table.Get(key)
+	if !found || tombstone {
+		return nil, errs.ErrKeyNotFound
+	}
+
+	return value, nil
 }
 
 func (engine *Engine) Put(key, value []byte) error {
