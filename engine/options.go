@@ -20,6 +20,7 @@ var ErrDbNameRequired = errors.New("DbName is required for options")
 var ErrMaxLevelLTEZero = errors.New("Skip List max level cannot be less than or equal to zero")
 var ErrMaxSizeLTEZero = errors.New("Skip List max size cannot be less than or equal to zero")
 var ErrUnknownStorageType = errors.New("unknown storage type")
+var ErrKeyNotFound = errors.New("key not found")
 
 func (opts *Options) Validate() error {
 	if opts.DbName == "" {
