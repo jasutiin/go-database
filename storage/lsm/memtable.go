@@ -3,7 +3,7 @@ package lsm
 import (
 	"strings"
 
-	"github.com/jasutiin/go-database/skiplist"
+	"github.com/jasutiin/go-database/storage/skiplist"
 )
 
 type memTableEntry struct {
