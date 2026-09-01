@@ -10,8 +10,8 @@ func (engine *Engine) Stop() error {
 	return nil
 }
 
-func (engine *Engine) Get(key []byte) error {
-	return nil
+func (engine *Engine) Get(key []byte) ([]byte, error) {
+	return nil, nil
 }
 
 func (engine *Engine) Put(key, value []byte) error {

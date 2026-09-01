@@ -21,7 +21,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = db.Get([]byte("hey"))
+	_, err = db.Get([]byte("hey"))
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

@@ -46,9 +46,9 @@ func (engine *Engine) Stop() error {
 	return engine.writeAheadLog.file.Close()
 }
 
-func (engine *Engine) Get(key []byte) error {
+func (engine *Engine) Get(key []byte) ([]byte, error) {
 	fmt.Println("Get() not implemented")
-	return nil
+	return nil, nil
 }
 
 func (engine *Engine) Put(key, value []byte) error {

@@ -7,7 +7,7 @@ import (
 
 type storageEngine interface {
 	Stop() error
-	Get(key []byte) error
+	Get(key []byte) ([]byte, error)
 	Put(key, value []byte) error
 	Delete(key []byte) error
 }
@@ -52,7 +52,7 @@ func (db *DB) Stop() error {
 	return db.engine.Stop()
 }
 
-func (db *DB) Get(key []byte) error {
+func (db *DB) Get(key []byte) ([]byte, error) {
 	return db.engine.Get(key)
 }
 
