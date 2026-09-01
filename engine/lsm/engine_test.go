@@ -61,7 +61,7 @@ func TestEnginePutAppendsWALAndMemTable(t *testing.T) {
 		t.Fatalf("WAL entry key/value = %q/%q", walEntries[0].key, walEntries[0].value)
 	}
 
-	entry, found := db.table.entries.Find(memTableEntry{key: "name"})
+	entry, found := db.table.entries.Find("name")
 	if !found {
 		t.Fatal("memtable entry was not found")
 	}

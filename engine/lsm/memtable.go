@@ -1,26 +1,18 @@
 package lsm
 
-import "github.com/jasutiin/go-database/skiplist"
+import (
+	"strings"
+
+	"github.com/jasutiin/go-database/skiplist"
+)
 
 type memTableEntry struct {
-	key       string
 	value     []byte
 	tombstone bool
 }
 
-func (entry memTableEntry) compare(other memTableEntry) int {
-	switch {
-	case entry.key < other.key:
-		return -1
-	case entry.key > other.key:
-		return 1
-	default:
-		return 0
-	}
-}
-
 type memTable struct {
-	entries *skiplist.SkipList[memTableEntry]
+	entries *skiplist.SkipList[string, memTableEntry]
 }
 
 func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
@@ -30,10 +22,10 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 		return nil, err
 	}
 
-	skip := skiplist.New[memTableEntry](
+	skip := skiplist.New[string, memTableEntry](
 		opts.SkipListMaxLevel,
 		opts.SkipListMaxSize,
-		memTableEntry.compare,
+		strings.Compare,
 	)
 
 	table := &memTable{
@@ -55,12 +47,20 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 
 func (table *memTable) Insert(key, value []byte, tombstone bool) error {
 	entry := memTableEntry{
-		key:       string(key),
 		value:     append([]byte(nil), value...),
 		tombstone: tombstone,
 	}
 
-	return table.entries.Insert(entry)
+	return table.entries.Insert(string(key), entry)
+}
+
+func (table *memTable) Get(key []byte) (value []byte, tombstone bool, found bool) {
+	entry, found := table.entries.Find(string(key))
+	if !found {
+		return nil, false, false
+	}
+
+	return append([]byte(nil), entry.value...), entry.tombstone, true
 }
 
 func (table *memTable) Size() int {
