@@ -34,10 +34,10 @@ func BenchmarkInsertBuild(b *testing.B) {
 			b.ResetTimer()
 
 			for iteration := 0; iteration < b.N; iteration++ {
-				list := New[int](16, 0, benchmarkCompareInts)
+				list := New[int, int](16, 0, benchmarkCompareInts)
 
 				for _, value := range values {
-					if err := list.Insert(value); err != nil {
+					if err := list.Insert(value, value); err != nil {
 						b.Fatal(err)
 					}
 				}
@@ -66,7 +66,7 @@ func BenchmarkInsertExisting(b *testing.B) {
 			b.ResetTimer()
 
 			for iteration := 0; iteration < b.N; iteration++ {
-				if err := list.Insert(value); err != nil {
+				if err := list.Insert(value, value); err != nil {
 					b.Fatal(err)
 				}
 			}
@@ -98,14 +98,14 @@ func BenchmarkFind(b *testing.B) {
 
 // newBenchmarkList creates a consistently shuffled list outside the timed
 // portion of benchmarks that need prebuilt data.
-func newBenchmarkList(b *testing.B, size int) *SkipList[int] {
+func newBenchmarkList(b *testing.B, size int) *SkipList[int, int] {
 	b.Helper()
 
-	list := New[int](16, 0, benchmarkCompareInts)
+	list := New[int, int](16, 0, benchmarkCompareInts)
 	values := rand.New(rand.NewSource(1)).Perm(size)
 
 	for _, value := range values {
-		if err := list.Insert(value); err != nil {
+		if err := list.Insert(value, value); err != nil {
 			b.Fatal(err)
 		}
 	}
