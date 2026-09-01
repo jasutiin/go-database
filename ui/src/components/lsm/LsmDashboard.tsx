@@ -1,5 +1,4 @@
 import {
-
   ArrowRight,
   Database,
   HardDrive,
@@ -11,45 +10,52 @@ import {
   Workflow,
 } from 'lucide-react'
 
+import { useState } from 'react'
+
+import { DatabaseSidebar } from './DatabaseSidebar'
 import { mockLsmSnapshot } from './mock-data'
 import { Metric, Panel } from './Panel'
 import type {
 
   CompactionSnapshot,
   ImmutableMemtableSnapshot,
-
   MemtableSnapshot,
   SkipListSnapshot,
   SstableLevelSnapshot,
+  StorageOperation,
   WalSnapshot,
 } from './types'
 
 export function LsmDashboard() {
   const snapshot = mockLsmSnapshot
+  const [lastOperation, setLastOperation] = useState<StorageOperation | null>(null)
 
   return (
     <main className="min-h-screen bg-[#e9e9e1] px-4 py-5 text-black sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1500px]">
-        <DashboardHeader />
+      <div className="mx-auto grid max-w-[1500px] gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <DatabaseSidebar lastOperation={lastOperation} onOperation={setLastOperation} />
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-[0.85fr_1.65fr_0.85fr]">
+        <div>
+          <DashboardHeader />
+
+          <section className="mt-5 grid gap-5 xl:grid-cols-[0.85fr_1.65fr_0.85fr]">
           <WalPanel wal={snapshot.wal} />
           <ActiveMemtablePanel memtable={snapshot.activeMemtable} skipList={snapshot.skipList} />
           <ImmutableMemtablePanel memtables={snapshot.immutableMemtables} />
-        </section>
+          </section>
 
-        <div className="my-5 flex items-center gap-2 overflow-hidden font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-black/60">
+          <div className="my-5 flex items-center gap-2 overflow-hidden font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-black/60">
           <span className="shrink-0">write path</span>
           <span className="h-px w-full bg-black/40" />
           <ArrowRight className="shrink-0" size={16} strokeWidth={2.5} />
           <span className="shrink-0">persistent levels</span>
-        </div>
+          </div>
 
-        <section className="grid gap-5 lg:grid-cols-[0.9fr_1.6fr]">
+          <section className="grid gap-5 lg:grid-cols-[0.9fr_1.6fr]">
           <CompactionPanel compaction={snapshot.compaction} />
           <SstablesPanel levels={snapshot.sstableLevels} />
-        </section>
-
+          </section>
+        </div>
       </div>
     </main>
   )

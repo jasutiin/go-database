@@ -1,5 +1,11 @@
 export type PanelStatus = 'idle' | 'live' | 'queued' | 'flushing'
 
+export type StorageOperation = {
+  kind: 'put' | 'update' | 'get' | 'delete'
+  key: string
+  value?: string
+}
+
 export type WalSnapshot = {
   segment: string
   entries: number
