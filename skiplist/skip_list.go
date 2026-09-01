@@ -36,8 +36,15 @@ func New[K, V any](maxLevel, maxSize int, compare func(a, b K) int) *SkipList[K,
 	}
 }
 
+const promotionProbability = 0.25
+
 func randomLevel(maxLevel int) int {
-	return rand.IntN(maxLevel) + 1
+	level := 1
+	for level < maxLevel && rand.Float64() < promotionProbability {
+		level++
+	}
+
+	return level
 }
 
 func (s *SkipList[K, V]) Insert(key K, value V) error {
