@@ -42,11 +42,6 @@ export type SstableLevelSnapshot = {
   tables: { id: string; size: string }[]
 }
 
-export type ActivityEvent = {
-  id: string
-  label: string
-  detail: string
-}
 
 export type LsmDashboardSnapshot = {
   wal: WalSnapshot
@@ -55,5 +50,4 @@ export type LsmDashboardSnapshot = {
   immutableMemtables: ImmutableMemtableSnapshot[]
   compaction: CompactionSnapshot
   sstableLevels: SstableLevelSnapshot[]
-  activity: ActivityEvent[]
 }

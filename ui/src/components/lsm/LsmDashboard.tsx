@@ -1,5 +1,5 @@
 import {
-  Activity,
+
   ArrowRight,
   Database,
   HardDrive,
@@ -14,7 +14,7 @@ import {
 import { mockLsmSnapshot } from './mock-data'
 import { Metric, Panel } from './Panel'
 import type {
-  ActivityEvent,
+
   CompactionSnapshot,
   ImmutableMemtableSnapshot,
 
@@ -50,7 +50,6 @@ export function LsmDashboard() {
           <SstablesPanel levels={snapshot.sstableLevels} />
         </section>
 
-        <ActivityStrip events={snapshot.activity} />
       </div>
     </main>
   )
@@ -212,13 +211,3 @@ function SstablesPanel({ levels }: { levels: SstableLevelSnapshot[] }) {
   )
 }
 
-function ActivityStrip({ events }: { events: ActivityEvent[] }) {
-  return (
-    <section className="mt-5 border-2 border-black bg-white shadow-[4px_4px_0_#111]">
-      <div className="flex items-center gap-2 border-b-2 border-black bg-black px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-white"><Activity size={14} /> activity feed // static preview</div>
-      <div className="grid divide-y-2 divide-black md:grid-cols-3 md:divide-x-2 md:divide-y-0">
-        {events.map((event) => <article key={event.id} className="p-3 font-mono text-[11px]"><p className="mb-1 font-bold uppercase"><span className="text-black/45">#{event.id}</span> {event.label}</p><p className="text-black/65">{event.detail}</p></article>)}
-      </div>
-    </section>
-  )
-}

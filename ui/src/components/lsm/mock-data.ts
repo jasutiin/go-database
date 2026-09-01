@@ -54,9 +54,4 @@ export const mockLsmSnapshot: LsmDashboardSnapshot = {
     },
     { level: 'l2', tables: [{ id: '000001.sst', size: '512 kb' }] },
   ],
-  activity: [
-    { id: '10492', label: 'put', detail: 'user:73 appended to wal' },
-    { id: '10491', label: 'delete', detail: 'cache:18 marked as tombstone' },
-    { id: '10490', label: 'flush', detail: 'mem-000013 is writing' },
-  ],
 }
