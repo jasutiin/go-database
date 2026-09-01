@@ -5,28 +5,29 @@ import (
 	"math/rand/v2"
 )
 
-type node[T any] struct {
-	data T
+type node[K, V any] struct {
+	key   K
+	value V
 
 	// smallest index is the level with no gaps
-	next []*node[T]
+	next []*node[K, V]
 }
 
 var ErrMaxSizeReached = errors.New("skip list maximum size reached")
 
-type SkipList[T any] struct {
-	head     *node[T]
+type SkipList[K, V any] struct {
+	head     *node[K, V]
 	level    int
 	maxLevel int
 	size     int
 	maxSize  int
-	compare  func(a, b T) int
+	compare  func(a, b K) int
 }
 
-func New[T any](maxLevel, maxSize int, compare func(a, b T) int) *SkipList[T] {
-	return &SkipList[T]{
-		head: &node[T]{
-			next: make([]*node[T], maxLevel),
+func New[K, V any](maxLevel, maxSize int, compare func(a, b K) int) *SkipList[K, V] {
+	return &SkipList[K, V]{
+		head: &node[K, V]{
+			next: make([]*node[K, V], maxLevel),
 		},
 		level:    0,
 		maxLevel: maxLevel,
@@ -39,16 +40,16 @@ func randomLevel(maxLevel int) int {
 	return rand.IntN(maxLevel) + 1
 }
 
-func (s *SkipList[T]) Insert(value T) error {
-	return s.insertAtLevel(value, randomLevel(s.maxLevel))
+func (s *SkipList[K, V]) Insert(key K, value V) error {
+	return s.insertAtLevel(key, value, randomLevel(s.maxLevel))
 }
 
-func (s *SkipList[T]) insertAtLevel(value T, nodeMaxLevel int) error {
-	update := make([]*node[T], s.maxLevel)
+func (s *SkipList[K, V]) insertAtLevel(key K, value V, nodeMaxLevel int) error {
+	update := make([]*node[K, V], s.maxLevel)
 	current := s.head
 
 	for level := s.level; level >= 0; level-- {
-		for current.next[level] != nil && s.compare(value, current.next[level].data) > 0 {
+		for current.next[level] != nil && s.compare(key, current.next[level].key) > 0 {
 			current = current.next[level]
 		}
 
@@ -56,8 +57,8 @@ func (s *SkipList[T]) insertAtLevel(value T, nodeMaxLevel int) error {
 	}
 
 	existing := update[0].next[0]
-	if existing != nil && s.compare(value, existing.data) == 0 {
-		existing.data = value
+	if existing != nil && s.compare(key, existing.key) == 0 {
+		existing.value = value
 		return nil
 	}
 
@@ -73,9 +74,10 @@ func (s *SkipList[T]) insertAtLevel(value T, nodeMaxLevel int) error {
 		s.level = nodeMaxLevel - 1
 	}
 
-	node := &node[T]{
-		data: value,
-		next: make([]*node[T], nodeMaxLevel),
+	node := &node[K, V]{
+		key:   key,
+		value: value,
+		next:  make([]*node[K, V], nodeMaxLevel),
 	}
 
 	for level := range nodeMaxLevel {
@@ -87,29 +89,30 @@ func (s *SkipList[T]) insertAtLevel(value T, nodeMaxLevel int) error {
 	return nil
 }
 
-func (s *SkipList[T]) Find(value T) (T, bool) {
+func (s *SkipList[K, V]) Find(key K) (V, bool) {
 	current := s.head
 
 	for level := s.level; level >= 0; level-- {
 		for current.next[level] != nil {
-			if s.compare(value, current.next[level].data) > 0 {
+			comparison := s.compare(key, current.next[level].key)
+			if comparison > 0 {
 				current = current.next[level]
-			} else if s.compare(value, current.next[level].data) == 0 {
-				return current.next[level].data, true
+			} else if comparison == 0 {
+				return current.next[level].value, true
 			} else {
-				break // go to next level
+				break
 			}
 		}
 	}
 
-	var empty T
+	var empty V
 	return empty, false
 }
 
-func (s *SkipList[T]) Size() int {
+func (s *SkipList[K, V]) Size() int {
 	return s.size
 }
 
-func (s *SkipList[T]) MaxSize() int {
+func (s *SkipList[K, V]) MaxSize() int {
 	return s.maxSize
 }
