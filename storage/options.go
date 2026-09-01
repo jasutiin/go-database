@@ -1,6 +1,6 @@
 package storage
 
-import engineerrors "github.com/jasutiin/go-database/storage/errors"
+import errs "github.com/jasutiin/go-database/storage/errors"
 
 type StorageType string
 
@@ -16,25 +16,19 @@ type Options struct {
 	SkipListMaxSize  int
 }
 
-var ErrDbNameRequired = engineerrors.ErrDbNameRequired
-var ErrMaxLevelLTEZero = engineerrors.ErrMaxLevelLTEZero
-var ErrMaxSizeLTEZero = engineerrors.ErrMaxSizeLTEZero
-var ErrUnknownStorageType = engineerrors.ErrUnknownStorageType
-var ErrKeyNotFound = engineerrors.ErrKeyNotFound
-
 func (opts *Options) Validate() error {
 	if opts.DbName == "" {
-		return ErrDbNameRequired
+		return errs.ErrDbNameRequired
 	}
 
 	switch opts.StorageType {
 	case StorageLSM:
 		if opts.SkipListMaxLevel <= 0 {
-			return ErrMaxLevelLTEZero
+			return errs.ErrMaxLevelLTEZero
 		}
 
 		if opts.SkipListMaxSize <= 0 {
-			return ErrMaxSizeLTEZero
+			return errs.ErrMaxSizeLTEZero
 		}
 
 		return nil
@@ -43,6 +37,6 @@ func (opts *Options) Validate() error {
 		return nil
 
 	default:
-		return ErrUnknownStorageType
+		return errs.ErrUnknownStorageType
 	}
 }
