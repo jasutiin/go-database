@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/jasutiin/go-database/storage/btree"
+	errs "github.com/jasutiin/go-database/storage/errors"
 	"github.com/jasutiin/go-database/storage/lsm"
 )
 
@@ -38,7 +39,7 @@ func Startup(opts *Options) (*Engine, error) {
 		})
 
 	default:
-		return nil, ErrUnknownStorageType
+		return nil, errs.ErrUnknownStorageType
 	}
 
 	if err != nil {
