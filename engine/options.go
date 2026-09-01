@@ -1,6 +1,6 @@
 package engine
 
-import "errors"
+import engineerrors "github.com/jasutiin/go-database/engine/errors"
 
 type StorageType string
 
@@ -16,11 +16,11 @@ type Options struct {
 	SkipListMaxSize  int
 }
 
-var ErrDbNameRequired = errors.New("DbName is required for options")
-var ErrMaxLevelLTEZero = errors.New("Skip List max level cannot be less than or equal to zero")
-var ErrMaxSizeLTEZero = errors.New("Skip List max size cannot be less than or equal to zero")
-var ErrUnknownStorageType = errors.New("unknown storage type")
-var ErrKeyNotFound = errors.New("key not found")
+var ErrDbNameRequired = engineerrors.ErrDbNameRequired
+var ErrMaxLevelLTEZero = engineerrors.ErrMaxLevelLTEZero
+var ErrMaxSizeLTEZero = engineerrors.ErrMaxSizeLTEZero
+var ErrUnknownStorageType = engineerrors.ErrUnknownStorageType
+var ErrKeyNotFound = engineerrors.ErrKeyNotFound
 
 func (opts *Options) Validate() error {
 	if opts.DbName == "" {
