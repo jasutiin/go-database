@@ -1,6 +1,6 @@
-package engine
+package storage
 
-import engineerrors "github.com/jasutiin/go-database/engine/errors"
+import engineerrors "github.com/jasutiin/go-database/storage/errors"
 
 type StorageType string
 

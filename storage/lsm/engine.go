@@ -1,6 +1,6 @@
 package lsm
 
-import errs "github.com/jasutiin/go-database/engine/errors"
+import errs "github.com/jasutiin/go-database/storage/errors"
 
 type Engine struct {
 	table         *memTable
