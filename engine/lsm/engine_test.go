@@ -1,11 +1,15 @@
 package lsm
 
 import (
+	"errors"
 	"fmt"
+
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	errs "github.com/jasutiin/go-database/engine/errors"
 )
 
 func TestEngineStartupInitializesStorage(t *testing.T) {
@@ -67,6 +71,41 @@ func TestEnginePutAppendsWALAndMemTable(t *testing.T) {
 	}
 	if string(entry.value) != "Alice" {
 		t.Fatalf("memtable value = %q, want %q", entry.value, "Alice")
+	}
+}
+
+func TestEngineGetReturnsValuesAndHidesTombstones(t *testing.T) {
+	opts, _ := testOptions(t)
+	db, err := Startup(opts)
+	if err != nil {
+		t.Fatalf("Startup() error = %v", err)
+	}
+	defer db.writeAheadLog.file.Close()
+
+	if err := db.Put([]byte("name"), []byte("Alice")); err != nil {
+		t.Fatalf("Put() error = %v", err)
+	}
+
+	value, err := db.Get([]byte("name"))
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if string(value) != "Alice" {
+		t.Fatalf("Get() value = %q, want %q", value, "Alice")
+	}
+
+	if err := db.Delete([]byte("name")); err != nil {
+		t.Fatalf("Delete() error = %v", err)
+	}
+
+	_, err = db.Get([]byte("name"))
+	if !errors.Is(err, errs.ErrKeyNotFound) {
+		t.Fatalf("Get() after Delete() error = %v, want %v", err, errs.ErrKeyNotFound)
+	}
+
+	_, err = db.Get([]byte("missing"))
+	if !errors.Is(err, errs.ErrKeyNotFound) {
+		t.Fatalf("Get() missing key error = %v, want %v", err, errs.ErrKeyNotFound)
 	}
 }
 
