@@ -16,7 +16,7 @@ github actions runs `go test ./...` for pushes and pull requests targeting `main
 
 <br>
 
-to run the skip list benchmarks, use `go test ./skiplist -run '^$' -bench '.' -benchmem`.
+to run the skip list benchmarks, use `go test ./storage/skiplist -run '^$' -bench '.' -benchmem`.
 
 ```text
 BenchmarkInsertBuild/size=1000-12    8    13836212 ns/op    1000 inserts/op    13836 ns/insert    103401 B/op    2001 allocs/op
