@@ -4,30 +4,30 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jasutiin/go-database/engine"
+	"github.com/jasutiin/go-database/storage"
 )
 
 func main() {
-	opts := &engine.Options{
+	opts := &storage.Options{
 		DbName:           "name",
-		StorageType:      engine.StorageLSM,
+		StorageType:      storage.StorageLSM,
 		SkipListMaxLevel: 10,
 		SkipListMaxSize:  1000,
 	}
-	db, err := engine.Startup(opts)
+	store, err := storage.Startup(opts)
 
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 
-	_, err = db.Get([]byte("hey"))
+	_, err = store.Get([]byte("hey"))
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 
-	err = db.Put([]byte("hey"), []byte("what's up"))
+	err = store.Put([]byte("hey"), []byte("what's up"))
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

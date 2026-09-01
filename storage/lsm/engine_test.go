@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	errs "github.com/jasutiin/go-database/engine/errors"
+	errs "github.com/jasutiin/go-database/storage/errors"
 )
 
 func TestEngineStartupInitializesStorage(t *testing.T) {

@@ -1,8 +1,8 @@
-package engine
+package storage
 
 import (
-	"github.com/jasutiin/go-database/engine/btree"
-	"github.com/jasutiin/go-database/engine/lsm"
+	"github.com/jasutiin/go-database/storage/btree"
+	"github.com/jasutiin/go-database/storage/lsm"
 )
 
 type storageEngine interface {
@@ -12,11 +12,11 @@ type storageEngine interface {
 	Delete(key []byte) error
 }
 
-type DB struct {
+type Engine struct {
 	engine storageEngine
 }
 
-func Startup(opts *Options) (*DB, error) {
+func Startup(opts *Options) (*Engine, error) {
 	if err := opts.Validate(); err != nil {
 		return nil, err
 	}
@@ -45,21 +45,21 @@ func Startup(opts *Options) (*DB, error) {
 		return nil, err
 	}
 
-	return &DB{engine: selectedEngine}, nil
+	return &Engine{engine: selectedEngine}, nil
 }
 
-func (db *DB) Stop() error {
-	return db.engine.Stop()
+func (storage *Engine) Stop() error {
+	return storage.engine.Stop()
 }
 
-func (db *DB) Get(key []byte) ([]byte, error) {
-	return db.engine.Get(key)
+func (storage *Engine) Get(key []byte) ([]byte, error) {
+	return storage.engine.Get(key)
 }
 
-func (db *DB) Put(key, value []byte) error {
-	return db.engine.Put(key, value)
+func (storage *Engine) Put(key, value []byte) error {
+	return storage.engine.Put(key, value)
 }
 
-func (db *DB) Delete(key []byte) error {
-	return db.engine.Delete(key)
+func (storage *Engine) Delete(key []byte) error {
+	return storage.engine.Delete(key)
 }
