@@ -1,8 +1,13 @@
 package lsm
 
-import errs "github.com/jasutiin/go-database/storage/errors"
+import (
+	"sync"
+
+	errs "github.com/jasutiin/go-database/storage/errors"
+)
 
 type Engine struct {
+	mutex         sync.RWMutex
 	table         *memTable
 	writeAheadLog *wal
 	sstables      []*sst
@@ -56,6 +61,9 @@ func (engine *Engine) Get(key []byte) ([]byte, error) {
 }
 
 func (engine *Engine) Put(key, value []byte) error {
+	engine.mutex.Lock()
+	defer engine.mutex.Unlock()
+
 	if err := engine.writeAheadLog.Insert(key, value, false); err != nil {
 		return err
 	}
@@ -64,6 +72,9 @@ func (engine *Engine) Put(key, value []byte) error {
 }
 
 func (engine *Engine) Delete(key []byte) error {
+	engine.mutex.Lock()
+	defer engine.mutex.Unlock()
+
 	if err := engine.writeAheadLog.Insert(key, nil, true); err != nil {
 		return err
 	}
