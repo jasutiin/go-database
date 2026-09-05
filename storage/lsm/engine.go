@@ -1,6 +1,7 @@
 package lsm
 
 import (
+	"fmt"
 	"sync"
 
 	errs "github.com/jasutiin/go-database/storage/errors"
@@ -70,7 +71,18 @@ func (engine *Engine) Put(key, value []byte) error {
 		return err
 	}
 
-	return engine.table.Insert(key, value, false)
+	err := engine.table.Insert(key, value, false)
+
+	if err != nil {
+		return err
+	}
+
+	if engine.table.Size() == engine.table.MaxSize() {
+		oldTable := engine.rotateMemTablesAndReturnOldOne()
+		go engine.flush(oldTable)
+	}
+
+	return nil
 }
 
 func (engine *Engine) Delete(key []byte) error {
@@ -82,4 +94,17 @@ func (engine *Engine) Delete(key []byte) error {
 	}
 
 	return engine.table.Insert(key, nil, true)
+}
+
+func (engine *Engine) rotateMemTablesAndReturnOldOne() *memTable {
+	newTable := CreateMemTable(engine.opts)
+	oldTable := engine.table
+	engine.table = newTable
+
+	return oldTable
+}
+
+// TODO: make it return an error. however idk how to handle goroutines that return errors so look into that too
+func (engine *Engine) flush(table *memTable) {
+	fmt.Printf("flush not implemented")
 }
