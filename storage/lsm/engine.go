@@ -11,6 +11,7 @@ type Engine struct {
 	table         *memTable
 	writeAheadLog *wal
 	sstables      []*sst
+	opts          *Options
 }
 
 func Startup(opts *Options) (*Engine, error) {
@@ -27,6 +28,7 @@ func Startup(opts *Options) (*Engine, error) {
 }
 
 func (engine *Engine) recover(opts *Options) error {
+	engine.opts = opts
 	log, err := LoadWAL(opts)
 	if err != nil {
 		return err

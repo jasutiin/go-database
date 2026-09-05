@@ -22,15 +22,7 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 		return nil, err
 	}
 
-	skip := skiplist.New[string, memTableEntry](
-		opts.SkipListMaxLevel,
-		opts.SkipListMaxSize,
-		strings.Compare,
-	)
-
-	table := &memTable{
-		entries: skip,
-	}
+	table := CreateMemTable(opts)
 
 	for _, value := range entries {
 		if err := table.Insert(
@@ -43,6 +35,20 @@ func LoadMemTable(opts *Options, log *wal) (*memTable, error) {
 	}
 
 	return table, nil
+}
+
+func CreateMemTable(opts *Options) *memTable {
+	skip := skiplist.New[string, memTableEntry](
+		opts.SkipListMaxLevel,
+		opts.SkipListMaxSize,
+		strings.Compare,
+	)
+
+	table := &memTable{
+		entries: skip,
+	}
+
+	return table
 }
 
 func (table *memTable) Insert(key, value []byte, tombstone bool) error {
