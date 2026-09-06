@@ -203,6 +203,58 @@ func TestInsertMaintainsSortedOrder(t *testing.T) {
 	}
 }
 
+func TestRemoveFrontReturnsEntriesInKeyOrder(t *testing.T) {
+	list := newTestSkipList[int, int](8, 100, compareInts)
+	for _, value := range []int{3, 1, 2} {
+		if err := list.Insert(value, value*10); err != nil {
+			t.Fatalf("Insert(%d) error = %v", value, err)
+		}
+	}
+
+	for index, wantKey := range []int{1, 2, 3} {
+		key, value, found := list.RemoveFront()
+		if !found {
+			t.Fatalf("RemoveFront() %d did not find an entry", index)
+		}
+		if key != wantKey || value != wantKey*10 {
+			t.Fatalf("RemoveFront() = %d/%d, want %d/%d", key, value, wantKey, wantKey*10)
+		}
+	}
+
+	if _, _, found := list.RemoveFront(); found {
+		t.Fatal("RemoveFront() found an entry in an empty list")
+	}
+	if list.Size() != 0 {
+		t.Fatalf("size = %d, want 0", list.Size())
+	}
+}
+
+func TestRemoveBackReturnsEntriesInReverseKeyOrder(t *testing.T) {
+	list := newTestSkipList[int, int](8, 100, compareInts)
+	for _, value := range []int{3, 1, 2} {
+		if err := list.Insert(value, value*10); err != nil {
+			t.Fatalf("Insert(%d) error = %v", value, err)
+		}
+	}
+
+	for index, wantKey := range []int{3, 2, 1} {
+		key, value, found := list.RemoveBack()
+		if !found {
+			t.Fatalf("RemoveBack() %d did not find an entry", index)
+		}
+		if key != wantKey || value != wantKey*10 {
+			t.Fatalf("RemoveBack() = %d/%d, want %d/%d", key, value, wantKey, wantKey*10)
+		}
+	}
+
+	if _, _, found := list.RemoveBack(); found {
+		t.Fatal("RemoveBack() found an entry in an empty list")
+	}
+	if list.Size() != 0 {
+		t.Fatalf("size = %d, want 0", list.Size())
+	}
+}
+
 func TestFindUsesKey(t *testing.T) {
 	list := newTestSkipList[int, testEntry](8, 100, compareInts)
 	if err := list.Insert(1, testEntry{name: "Ada"}); err != nil {

@@ -116,6 +116,60 @@ func (s *SkipList[K, V]) Find(key K) (V, bool) {
 	return empty, false
 }
 
+func (s *SkipList[K, V]) RemoveFront() (K, V, bool) {
+	front := s.head.next[0]
+	if front == nil {
+		var emptyKey K
+		var emptyValue V
+		return emptyKey, emptyValue, false
+	}
+
+	for level := range front.next {
+		if s.head.next[level] == front {
+			s.head.next[level] = front.next[level]
+		}
+	}
+
+	s.size--
+	s.reduceLevel()
+	return front.key, front.value, true
+}
+
+func (s *SkipList[K, V]) RemoveBack() (K, V, bool) {
+	if s.head.next[0] == nil {
+		var emptyKey K
+		var emptyValue V
+		return emptyKey, emptyValue, false
+	}
+
+	back := s.head
+	for level := s.level; level >= 0; level-- {
+		for back.next[level] != nil {
+			back = back.next[level]
+		}
+	}
+
+	for level := 0; level <= s.level; level++ {
+		previous := s.head
+		for previous.next[level] != nil && previous.next[level] != back {
+			previous = previous.next[level]
+		}
+		if previous.next[level] == back {
+			previous.next[level] = back.next[level]
+		}
+	}
+
+	s.size--
+	s.reduceLevel()
+	return back.key, back.value, true
+}
+
+func (s *SkipList[K, V]) reduceLevel() {
+	for s.level > 0 && s.head.next[s.level] == nil {
+		s.level--
+	}
+}
+
 func (s *SkipList[K, V]) Size() int {
 	return s.size
 }
