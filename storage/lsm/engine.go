@@ -80,7 +80,11 @@ func (engine *Engine) Put(key, value []byte) error {
 
 	if engine.currentTable.Size() == engine.currentTable.MaxSize() {
 		engine.rotateMemTables()
-		go engine.flush()
+		go func() {
+			if err := engine.flush(); err != nil {
+				fmt.Printf("flush memtable: %v\n", err)
+			}
+		}()
 	}
 
 	return nil
@@ -97,14 +101,53 @@ func (engine *Engine) Delete(key []byte) error {
 	return engine.currentTable.Insert(key, nil, true)
 }
 
-// this method returns (new table, old table)
 func (engine *Engine) rotateMemTables() {
 	newTable := CreateMemTable(engine.opts)
 	engine.immutableTable = engine.currentTable
 	engine.currentTable = newTable
 }
 
-// TODO: make it return an error. however idk how to handle goroutines that return errors so look into that too
-func (engine *Engine) flush() {
-	fmt.Printf("flush not implemented")
+func (engine *Engine) flush() error {
+	engine.mutex.RLock()
+	table := engine.immutableTable
+	engine.mutex.RUnlock()
+
+	if table == nil {
+		return fmt.Errorf("no immutable memtable to flush")
+	}
+
+	sstable, err := newSST(engine.opts)
+	if err != nil {
+		return err
+	}
+
+	for {
+		key, value, found := table.entries.RemoveFront()
+		if !found {
+			break
+		}
+
+		if err := sstable.appendEntryToSSTFile(&sstEntry{
+			key:       key,
+			value:     value.value,
+			tombstone: value.tombstone,
+		}); err != nil {
+			sstable.file.Close()
+			return err
+		}
+	}
+
+	if err := sstable.file.Sync(); err != nil {
+		sstable.file.Close()
+		return fmt.Errorf("sync SST: %w", err)
+	}
+
+	engine.mutex.Lock()
+	engine.sstables = append(engine.sstables, sstable)
+	if engine.immutableTable == table {
+		engine.immutableTable = nil
+	}
+	engine.mutex.Unlock()
+
+	return nil
 }
