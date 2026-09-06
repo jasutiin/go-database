@@ -8,11 +8,12 @@ import (
 )
 
 type Engine struct {
-	mutex         sync.RWMutex
-	table         *memTable
-	writeAheadLog *wal
-	sstables      []*sst
-	opts          *Options
+	mutex          sync.RWMutex
+	immutableTable *memTable
+	currentTable   *memTable
+	writeAheadLog  *wal
+	sstables       []*sst
+	opts           *Options
 }
 
 func Startup(opts *Options) (*Engine, error) {
@@ -41,7 +42,7 @@ func (engine *Engine) recover(opts *Options) error {
 		return err
 	}
 
-	engine.table = table
+	engine.currentTable = table
 	engine.writeAheadLog = log
 	return nil
 }
@@ -55,7 +56,7 @@ func (engine *Engine) Stop() error {
 }
 
 func (engine *Engine) Get(key []byte) ([]byte, error) {
-	value, tombstone, found := engine.table.Get(key)
+	value, tombstone, found := engine.currentTable.Get(key)
 	if !found || tombstone {
 		return nil, errs.ErrKeyNotFound
 	}
@@ -71,15 +72,15 @@ func (engine *Engine) Put(key, value []byte) error {
 		return err
 	}
 
-	err := engine.table.Insert(key, value, false)
+	err := engine.currentTable.Insert(key, value, false)
 
 	if err != nil {
 		return err
 	}
 
-	if engine.table.Size() == engine.table.MaxSize() {
-		oldTable := engine.rotateMemTablesAndReturnOldOne()
-		go engine.flush(oldTable)
+	if engine.currentTable.Size() == engine.currentTable.MaxSize() {
+		engine.rotateMemTables()
+		go engine.flush()
 	}
 
 	return nil
@@ -93,18 +94,17 @@ func (engine *Engine) Delete(key []byte) error {
 		return err
 	}
 
-	return engine.table.Insert(key, nil, true)
+	return engine.currentTable.Insert(key, nil, true)
 }
 
-func (engine *Engine) rotateMemTablesAndReturnOldOne() *memTable {
+// this method returns (new table, old table)
+func (engine *Engine) rotateMemTables() {
 	newTable := CreateMemTable(engine.opts)
-	oldTable := engine.table
-	engine.table = newTable
-
-	return oldTable
+	engine.immutableTable = engine.currentTable
+	engine.currentTable = newTable
 }
 
 // TODO: make it return an error. however idk how to handle goroutines that return errors so look into that too
-func (engine *Engine) flush(table *memTable) {
+func (engine *Engine) flush() {
 	fmt.Printf("flush not implemented")
 }
