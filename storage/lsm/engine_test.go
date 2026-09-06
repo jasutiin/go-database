@@ -21,8 +21,8 @@ func TestEngineStartupInitializesStorage(t *testing.T) {
 	}
 	defer db.writeAheadLog.file.Close()
 
-	if db.table == nil {
-		t.Fatal("Startup() did not initialize the memtable")
+	if db.currentTable == nil {
+		t.Fatal("Startup() did not initialize the current memtable")
 	}
 
 	if db.writeAheadLog == nil {
@@ -65,7 +65,7 @@ func TestEnginePutAppendsWALAndMemTable(t *testing.T) {
 		t.Fatalf("WAL entry key/value = %q/%q", walEntries[0].key, walEntries[0].value)
 	}
 
-	entry, found := db.table.entries.Find("name")
+	entry, found := db.currentTable.entries.Find("name")
 	if !found {
 		t.Fatal("memtable entry was not found")
 	}
